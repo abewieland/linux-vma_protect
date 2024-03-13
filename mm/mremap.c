@@ -948,10 +948,7 @@ SYSCALL_DEFINE5(mremap, unsigned long, addr, unsigned long, old_len,
 		goto out;
 	}
 
-	/*
-	 * Protected mappings and their code addresses cannot be moved, shrunk,
-	 * or expanded
-	 */
+	/* Protected VMAs and their code address VMAs cannot be remapped */
 	if (vma->vm_flags & VM_PROTECT || !list_empty(&vma->vm_prot_addrs))
 		goto out;
 

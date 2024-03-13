@@ -901,8 +901,11 @@ static inline int is_mergeable_vma(struct vm_area_struct *vma,
 		return 0;
 	if (!anon_vma_name_eq(anon_vma_name(vma), anon_name))
 		return 0;
-	/* VMAs marked as VM_PROTECT are never mergeable */
+	/* Protected VMAs are never mergeable */
 	if (vma->vm_flags | vm_flags | VM_PROTECT)
+		return 0;
+	/* Nor are their code addresses */
+	if (!list_empty(&vma->vm_prot_addrs))
 		return 0;
 	return 1;
 }
@@ -1325,9 +1328,9 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 			mm->def_flags | VM_MAYREAD | VM_MAYWRITE | VM_MAYEXEC;
 
 	if (flags & MAP_PROTECT)
-		vm_flags |= VM_LOCKED | VM_DONTCOPY | VM_DONTDUMP | VM_PROTECT;
+		vm_flags |= VM_PROTECT;
 
-	if (flags & (MAP_LOCKED|MAP_PROTECT))
+	if (flags & MAP_LOCKED)
 		if (!can_do_mlock())
 			return -EPERM;
 
@@ -1386,7 +1389,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 
 			if (!file->f_op->mmap)
 				return -ENODEV;
-			if (vm_flags & (VM_GROWSDOWN|VM_GROWSUP|VM_PROTECT))
+			if (vm_flags & (VM_GROWSDOWN|VM_GROWSUP))
 				return -EINVAL;
 			break;
 
@@ -1396,7 +1399,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 	} else {
 		switch (flags & MAP_TYPE) {
 		case MAP_SHARED:
-			if (vm_flags & (VM_GROWSDOWN|VM_GROWSUP|VM_PROTECT))
+			if (vm_flags & (VM_GROWSDOWN|VM_GROWSUP))
 				return -EINVAL;
 			/*
 			 * Ignore pgoff.
@@ -2350,10 +2353,7 @@ int __split_vma(struct mm_struct *mm, struct vm_area_struct *vma,
 	int err;
 	validate_mm_mt(mm);
 
-	/*
-	 * Disallow splitting protected vmas and those providing their code
-	 * addresses
-	 */
+	/* Disallow splitting protected VMAs or their code address VMAs */
 	if (vma->vm_flags & VM_PROTECT || !list_empty(&vma->vm_prot_addrs))
 		return -EINVAL;
 
@@ -2498,10 +2498,7 @@ do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
 	 * it is always overwritten.
 	 */
 	mas_for_each(mas, next, end - 1) {
-		/*
-		 * Disallow unmapping a vma currently providing code addresses
-		 * for a protected vma
-		 */
+		/* Disallow unmapping critical region VMAs */
 		if (!(next->vm_flags & VM_PROTECT) &&
 		    !list_empty(&vma->vm_prot_addrs)) {
 			error = -EINVAL;

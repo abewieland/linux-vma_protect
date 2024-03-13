@@ -1039,7 +1039,7 @@ static int madvise_vma_behavior(struct vm_area_struct *vma,
 		new_flags |= VM_DONTCOPY;
 		break;
 	case MADV_DOFORK:
-		if (vma->vm_flags & (VM_IO|VM_PROTECT))
+		if (vma->vm_flags & VM_IO)
 			return -EINVAL;
 		new_flags &= ~VM_DONTCOPY;
 		break;
@@ -1056,7 +1056,7 @@ static int madvise_vma_behavior(struct vm_area_struct *vma,
 		new_flags |= VM_DONTDUMP;
 		break;
 	case MADV_DODUMP:
-		if (!is_vm_hugetlb_page(vma) && new_flags & (VM_SPECIAL|VM_PROTECT))
+		if (!is_vm_hugetlb_page(vma) && new_flags & VM_SPECIAL)
 			return -EINVAL;
 		new_flags &= ~VM_DONTDUMP;
 		break;

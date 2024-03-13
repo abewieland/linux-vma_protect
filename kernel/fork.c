@@ -1586,6 +1586,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 		return 0;
 
 #ifdef CONFIG_VMA_PROTECT
+	/* Prevent threads (or forking) if a process has a protected VMA */
 	if (atomic_read(&oldmm->protect_vm))
 		return -EINVAL;
 #endif
