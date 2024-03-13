@@ -29,6 +29,11 @@
 #define MAP_HUGETLB		0x040000	/* create a huge page mapping */
 #define MAP_SYNC		0x080000 /* perform synchronous page faults for the mapping */
 #define MAP_FIXED_NOREPLACE	0x100000	/* MAP_FIXED which doesn't unmap underlying mapping */
+#ifdef CONFIG_VMA_PROTECT
+# define MAP_PROTECT		0x400000	/* make a vma_protect mapping */
+#else
+# define MAP_PROTECT		0
+#endif
 
 #define MAP_UNINITIALIZED 0x4000000	/* For anonymous mmap, memory could be
 					 * uninitialized */

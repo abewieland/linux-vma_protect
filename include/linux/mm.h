@@ -377,6 +377,13 @@ extern unsigned int kobjsize(const void *objp);
 # define VM_UFFD_MINOR		VM_NONE
 #endif /* CONFIG_HAVE_ARCH_USERFAULTFD_MINOR */
 
+#ifdef CONFIG_VMA_PROTECT
+# define VM_PROTECT_BIT		38
+# define VM_PROTECT		BIT(VM_PROTECT_BIT)
+#else
+# define VM_PROTECT		VM_NONE
+#endif
+
 /* Bits set in the VMA until the stack is in its final location */
 #define VM_STACK_INCOMPLETE_SETUP (VM_RAND_READ | VM_SEQ_READ | VM_STACK_EARLY)
 
@@ -627,6 +634,9 @@ static inline void vma_init(struct vm_area_struct *vma, struct mm_struct *mm)
 	vma->vm_mm = mm;
 	vma->vm_ops = &dummy_vm_ops;
 	INIT_LIST_HEAD(&vma->anon_vma_chain);
+#ifdef CONFIG_VMA_PROTECT
+	INIT_LIST_HEAD(&vma->vm_prot_addrs);
+#endif
 }
 
 static inline void vma_set_anonymous(struct vm_area_struct *vma)
@@ -3527,6 +3537,12 @@ madvise_set_anon_name(struct mm_struct *mm, unsigned long start,
 		      unsigned long len_in, struct anon_vma_name *anon_name) {
 	return 0;
 }
+#endif
+
+#ifdef CONFIG_VMA_PROTECT
+void vma_protect_cleanup(struct vm_area_struct *vma);
+#else
+static inline void vma_protect_cleanup(struct vm_area_struct *vma) {}
 #endif
 
 #endif /* _LINUX_MM_H */

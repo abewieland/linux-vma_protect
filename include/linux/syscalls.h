@@ -1057,6 +1057,9 @@ asmlinkage long sys_memfd_secret(unsigned int flags);
 asmlinkage long sys_set_mempolicy_home_node(unsigned long start, unsigned long len,
 					    unsigned long home_node,
 					    unsigned long flags);
+#ifdef CONFIG_VMA_PROTECT
+asmlinkage long sys_vma_protect(unsigned long addr, unsigned long cmd, unsigned long arg);
+#endif
 
 /*
  * Architecture-specific system calls

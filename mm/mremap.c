@@ -948,6 +948,13 @@ SYSCALL_DEFINE5(mremap, unsigned long, addr, unsigned long, old_len,
 		goto out;
 	}
 
+	/*
+	 * Protected mappings and their code addresses cannot be moved, shrunk,
+	 * or expanded
+	 */
+	if (vma->vm_flags & VM_PROTECT || !list_empty(&vma->vm_prot_addrs))
+		goto out;
+
 	if (is_vm_hugetlb_page(vma)) {
 		struct hstate *h __maybe_unused = hstate_vma(vma);
 

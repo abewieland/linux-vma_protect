@@ -506,6 +506,24 @@ struct vm_area_struct {
 	struct mempolicy *vm_policy;	/* NUMA policy for the VMA */
 #endif
 	struct vm_userfaultfd_ctx vm_userfaultfd_ctx;
+#ifdef CONFIG_VMA_PROTECT		/* Both serialized by mmap_lock */
+	/*
+	 * If VM_PROTECT is set, contains a list of code mappings, each with its
+	 * list of valid addresses. If VM_PROTECT is not set, any entries here
+	 * point the opposite direction (to protected mappings, each with a list
+	 * of valid addresses).
+	 */
+	struct list_head vm_prot_addrs;
+	/*
+	 * If VM_PROTECT is set and the mapping is open, value is all 0s.
+	 * If the mapping is closed, it has the 9th bit set and contains the
+	 * lower 8 bits of the previous vm_flags, to restore them on open.
+	 *
+	 * If VM_PROTECT isn't set and vm_prot_addrs isn't empty, contains 1 if
+	 * VM_MAYWRITE was set before it was added as a code mapping, 0 otherwise
+	 */
+	unsigned int vm_prot_state;
+#endif
 } __randomize_layout;
 
 struct kioctx_table;
@@ -699,6 +717,9 @@ struct mm_struct {
 		 * including merged and not merged.
 		 */
 		unsigned long ksm_rmap_items;
+#endif
+#ifdef CONFIG_VMA_PROTECT
+		atomic_t protect_vm; 	/* current vmas with VM_PROTECT */
 #endif
 #ifdef CONFIG_LRU_GEN
 		struct {

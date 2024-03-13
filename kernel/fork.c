@@ -474,6 +474,9 @@ struct vm_area_struct *vm_area_dup(struct vm_area_struct *orig)
 		 */
 		*new = data_race(*orig);
 		INIT_LIST_HEAD(&new->anon_vma_chain);
+#ifdef CONFIG_VMA_PROTECT
+		INIT_LIST_HEAD(&new->vm_prot_addrs);
+#endif
 		dup_anon_vma_name(orig, new);
 	}
 	return new;
@@ -1582,6 +1585,10 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 	if (!oldmm)
 		return 0;
 
+#ifdef CONFIG_VMA_PROTECT
+	if (atomic_read(&oldmm->protect_vm))
+		return -EINVAL;
+#endif
 	if (clone_flags & CLONE_VM) {
 		mmget(oldmm);
 		mm = oldmm;

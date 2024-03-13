@@ -644,6 +644,15 @@ config MMU_NOTIFIER
 	select SRCU
 	select INTERVAL_TREE
 
+config VMA_PROTECT
+	bool "Enable vma_protect syscall"
+	default y
+	depends on 64BIT && MMU
+	select MMU_NOTIFIER
+	help
+	  Enable the vma_protect syscall, allowing userspace programs to set
+	  valid addresses of critical ranges that may access a VMA.
+
 config KSM
 	bool "Enable KSM for page merging"
 	depends on MMU

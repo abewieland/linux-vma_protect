@@ -1692,7 +1692,7 @@ int __mm_populate(unsigned long start, unsigned long len, int ignore_errors)
 		 * range with the first VMA. Also, skip undesirable VMA types.
 		 */
 		nend = min(end, vma->vm_end);
-		if (vma->vm_flags & (VM_IO | VM_PFNMAP))
+		if (vma->vm_flags & (VM_IO | VM_PFNMAP | VM_PROTECT))
 			continue;
 		if (nstart < vma->vm_start)
 			nstart = vma->vm_start;
